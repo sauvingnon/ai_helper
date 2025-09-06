@@ -1,0 +1,36 @@
+services:
+
+  ai_service:
+    build: ./ai_service
+    container_name: ai_service
+    restart: unless-stopped
+    env_file:
+      - ./ai_service/.env
+    networks:
+      - internal
+    ports:
+      - "8005:8005"
+    mem_limit: 160m
+    cpus: "0.2"
+
+  ai_bot: 
+    build: ./ai_bot
+    container_name: ai_bot
+    restart: unless-stopped
+    env_file:
+      - ./ai_bot/.env
+    networks:
+      - internal
+    # ports:
+    #   - "5678:5678"  # порт для дебаггера
+    # command: >
+    #   sh -c "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client main.py"
+    mem_limit: 128m
+    cpus: "0.2"
+    command: python main.py
+
+networks:
+  internal:
+    name: internal
+    driver: bridge
+
