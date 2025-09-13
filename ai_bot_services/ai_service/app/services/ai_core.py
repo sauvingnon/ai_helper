@@ -10,8 +10,11 @@ client = Groq(
 async def ai_request(request: AIRequest) -> str:
 
     try:
+
+        logger.info(f"Выполняется запрос к модели {request.model.value}")
+
         chat_completion = client.chat.completions.create(
-            model=request.model,
+            model=request.model.value,
             messages=[
                 {
                     "role": "system",

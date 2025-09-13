@@ -20,6 +20,8 @@ async def cmd_start(message: Message, state: FSMContext):
     try:
         user_name = extract_username(message.from_user)
 
+        logger.info(f"Пользователь {user_name} запустил бота.")
+
         await message.answer(get_welcome_message(user_name), reply_markup=start_keyboard)
 
     except Exception as e:

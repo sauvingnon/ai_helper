@@ -23,6 +23,8 @@ async def input_email(message: Message, state: FSMContext):
 
         ai_request = AIRequest(model=model, message=text_message)
 
+        logger.info(f"Пользователь {message.from_user.username} с выбранной моделью {model} сделал запрос: {text_message}")
+
         response = await ai_service.get_answer(ai_request)
 
         if response is None:
@@ -36,6 +38,8 @@ async def input_email(message: Message, state: FSMContext):
         
         for chunk in split_text(response):
             await message.answer(chunk)
+
+        logger.info(f"Пользователь {message.from_user.username} успешно получил ответ.")
 
     except Exception as e:
         logger.exception(f"Ошибка обработки запроса от пользователя: {e}")
