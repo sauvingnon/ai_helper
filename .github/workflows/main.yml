@@ -1,0 +1,95 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ai_secrets
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo -e "Host *\n  StrictHostKeyChecking no\n  IdentityFile ~/.ssh/id_ed25519\n" > ~/.ssh/config
+          
+      - name: Setup Git SSH Key on server
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+              mkdir -p ~/.ssh &&
+              echo '${{ secrets.GIT_DEPLOY_KEY }}' > ~/.ssh/id_git &&
+              chmod 600 ~/.ssh/id_git &&
+              printf 'Host github.com\n  IdentityFile ~/.ssh/id_git\n  StrictHostKeyChecking no\n' >> ~/.ssh/config
+            "
+      - name: Prepare project dir on server
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            echo '📂 Подготавливаю /srv/ai_helper'
+            sudo mkdir -p /srv/ai_helper
+            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /srv/ai_helper
+            sudo chmod -R 755 /srv/ai_helper
+          "
+          
+      - name: Clone Repo if not exists
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+            if ! command -v git &> /dev/null; then
+              echo "📦 Git не найден, устанавливаю..."
+              if [ -f /etc/debian_version ]; then
+                sudo apt update && sudo apt install -y git
+              elif [ -f /etc/redhat-release ]; then
+                sudo yum install -y git
+              else
+                echo "❌ Неизвестная ОС, git нужно ставить руками" && exit 1
+              fi
+            fi
+      
+            if [ ! -d /srv/ai_helper/.git ]; then
+              git clone git@github.com:sauvingnon/ai_helper.git /srv/ai_helper
+            fi
+          '
+      - name: Create env files on server
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+              echo '${{ secrets.TG_BOT_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_tg_bot/.env &&
+              echo '${{ secrets.VK_BOT_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_vk_bot/.env &&
+              echo '${{ secrets.AI_SERVICE_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_service/.env
+            "
+      - name: Deploy over SSH
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+            cd /srv/ai_helper &&
+            git fetch origin master &&
+            git reset --hard origin/master &&
+            cd /srv/ai_helper/ai_bot_services &&
+            sudo docker compose down &&
+            sudo docker compose up -d --build
+          '
+      - name: Проверка контейнеров
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+            echo "🔍 Контейнеры:"
+            sudo docker ps
+            echo ""
+            echo "🚨 Проверка: все сервисы running?"
+            FAIL=0
+            for c in bot ai_service ai_tg_bot ai_vk_bot; do
+              STATUS=$(sudo docker inspect -f "{{.State.Status}}" ${c} || echo "missing")
+              echo "$c -> $STATUS"
+              if [ "$STATUS" != "running" ]; then
+                echo "❌ Контейнер $c не работает"
+                FAIL=1
+              fi
+            done
+            exit $FAIL
+          '
