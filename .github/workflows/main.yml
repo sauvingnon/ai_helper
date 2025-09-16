@@ -17,31 +17,31 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ ai_secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           echo -e "Host *\n  StrictHostKeyChecking no\n  IdentityFile ~/.ssh/id_ed25519\n" > ~/.ssh/config
           
       - name: Setup Git SSH Key on server
         run: |
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} \
-            ${{ ai_secrets.SSH_USER }}@${{ ai_secrets.SSH_HOST }} "
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
               mkdir -p ~/.ssh &&
-              echo '${{ ai_secrets.GIT_DEPLOY_KEY }}' > ~/.ssh/id_git &&
+              echo '${{ secrets.GIT_DEPLOY_KEY }}' > ~/.ssh/id_git &&
               chmod 600 ~/.ssh/id_git &&
               printf 'Host github.com\n  IdentityFile ~/.ssh/id_git\n  StrictHostKeyChecking no\n' >> ~/.ssh/config
             "
       - name: Prepare project dir on server
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ ai_secrets.SSH_PORT }} ${{ ai_secrets.SSH_USER }}@${{ ai_secrets.SSH_HOST }} "
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
             echo '📂 Подготавливаю /srv/ai_helper'
             sudo mkdir -p /srv/ai_helper
-            sudo chown -R ${{ ai_secrets.SSH_USER }}:${{ ai_secrets.SSH_USER }} /srv/ai_helper
+            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /srv/ai_helper
             sudo chmod -R 755 /srv/ai_helper
           "
           
       - name: Clone Repo if not exists
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ ai_secrets.SSH_PORT }} ${{ ai_secrets.SSH_USER }}@${{ ai_secrets.SSH_HOST }} '
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
             if ! command -v git &> /dev/null; then
               echo "📦 Git не найден, устанавливаю..."
               if [ -f /etc/debian_version ]; then
@@ -59,15 +59,15 @@ jobs:
           '
       - name: Create env files on server
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ ai_secrets.SSH_PORT }} \
-            ${{ ai_secrets.SSH_USER }}@${{ ai_secrets.SSH_HOST }} "
-              echo '${{ ai_secrets.TG_BOT_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_tg_bot/.env &&
-              echo '${{ ai_secrets.VK_BOT_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_vk_bot/.env &&
-              echo '${{ ai_secrets.AI_SERVICE_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_service/.env
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+              echo '${{ secrets.TG_BOT_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_tg_bot/.env &&
+              echo '${{ secrets.VK_BOT_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_vk_bot/.env &&
+              echo '${{ secrets.AI_SERVICE_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_service/.env
             "
       - name: Deploy over SSH
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ ai_secrets.SSH_PORT }} ${{ ai_secrets.SSH_USER }}@${{ ai_secrets.SSH_HOST }} '
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
             cd /srv/ai_helper &&
             git fetch origin master &&
             git reset --hard origin/master &&
@@ -77,7 +77,7 @@ jobs:
           '
       - name: Проверка контейнеров
         run: |
-          ssh -p ${{ ai_secrets.SSH_PORT }} ${{ ai_secrets.SSH_USER }}@${{ ai_secrets.SSH_HOST }} '
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
             echo "🔍 Контейнеры:"
             sudo docker ps
             echo ""
