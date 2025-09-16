@@ -3,16 +3,18 @@ from config import API_TOKEN
 from logger import logger
 from app.api.schemas.model_name import AIRequest
 
+# Подключение к стороннему AI-API
 client = Groq(
     api_key=API_TOKEN
 )
 
+# Отправка запроса
 async def ai_request(request: AIRequest) -> str:
 
     try:
-
         logger.info(f"Выполняется запрос к модели {request.model.value}")
 
+        # В начале задаем системный промт, для того, чтобы модель имела контекст.
         chat_completion = client.chat.completions.create(
             model=request.model.value,
             messages=[

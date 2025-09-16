@@ -7,12 +7,12 @@ LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
 
 # Основной логгер
-logger = logging.getLogger("ai_bot")
+logger = logging.getLogger("ai_tg_bot")
 logger.setLevel(logging.INFO)
 
 # Файл с ротацией: max 5МБ на файл, хранить до 5 файлов
 file_handler = RotatingFileHandler(
-    filename=os.path.join(LOG_DIR, "ai_bot.log"),
+    filename=os.path.join(LOG_DIR, "ai_tg_bot.log"),
     maxBytes=5*1024*1024,
     backupCount=5,
     encoding="utf-8"

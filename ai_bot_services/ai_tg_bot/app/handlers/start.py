@@ -15,6 +15,7 @@ def extract_username(user):
     else:
         return f"Unknown {user.id}"
 
+# Стартовое сообщение
 @router.message(F.text == "/start")
 async def cmd_start(message: Message, state: FSMContext):
     try:

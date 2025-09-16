@@ -1,27 +1,10 @@
-from vkbottle.bot import BotLabeler, Message, MessageEvent
-from vkbottle import Keyboard, KeyboardButtonColor, Callback
+from vkbottle.bot import BotLabeler, Message, MessageEvent, rules
 from app.schemas.ai_service import ModelName, USER_MODELS, MODEL_CONFIG
-from typing import Union
+from logger import logger
+from app.keyboards.inline import get_model_keyboard
+from vkbottle.dispatch.rules import ABCRule
 
-chat_labeler = BotLabeler()
-
-# ---------------- Клавиатуры ----------------
-
-def get_model_keyboard():
-    keyboard = Keyboard(one_time=True, inline=True)
-    for m in ModelName:
-        keyboard.add(
-            Callback(
-                label=m.name,
-                payload={"command": f"choose_model:{m.value}"}
-            )
-        )
-    keyboard.row()
-    keyboard.add(
-        Callback("❌ Отмена", payload={"command": "cancel_model"}),
-        color=KeyboardButtonColor.NEGATIVE
-    )
-    return keyboard
+labeler = BotLabeler()
 
 def get_model_description() -> str:
     lines = ["📖 Доступные модели:\n"]
@@ -39,47 +22,35 @@ def get_model_description() -> str:
 # ---------------- Хэндлеры ----------------
 
 # ❌ Отмена выбора модели (текст + payload)
-@chat_labeler.message(text="/cancel_model")
+@labeler.message(payload={"command": "cancel_model"})
 async def cmd_cancel_model(obj):
     user_id = obj.from_id
     value = USER_MODELS.get(user_id, ModelName.LLAMA3_1_8B.value)
     await obj.answer(f"Окей, оставляем тебе {value}. Он тебя слушает 🙂")
 
 # 🚀 Команда "Выбрать модель" (текст + кнопка)
-@chat_labeler.message(text="/set_model")
-async def cmd_set_model(obj):
-    await obj.answer(
+@labeler.message(payload={"command": "set_model"})
+async def cmd_set_model(message: Message):
+    logger.info("Команда выбрать модель запущена")
+    await message.answer(
         f"{get_model_description()}\n\nВыбери модель:",
         keyboard=get_model_keyboard().get_json()
     )
 
-# ---------------- Универсальное правило для выбора модели ----------------
-
-class ChooseModelRule(ABCRule[Union[Message, MessageEvent]]):
-    """Ловит текстовую команду /choose_model <model> и inline-кнопку choose_model:<model>"""
-
-    async def check(self, obj) -> bool:
-        # 1️⃣ payload с кнопки
-        payload_command = getattr(obj, "payload", {}).get("command") if hasattr(obj, "payload") else None
-        if payload_command and payload_command.startswith("choose_model:"):
-            return True
-
-        # 2️⃣ текстовая команда
-        text = getattr(obj, "text", "")
-        if text.startswith("/choose_model"):
-            return True
-
+# Правило для обработки выбора модели
+class ChooseModelRule(ABCRule[Message]):
+    async def check(self, message: Message):
+        payload = message.get_payload_json()
+        if payload is None:
+            return False
+        param = payload['command']
+        if param and param.startswith("choose_model:"):
+            return {"model_value": param.split(":", 1)[1]}
         return False
 
-# ✅ Пользователь выбрал модель
-@chat_labeler.message(ChooseModelRule())
-async def choose_model(obj):
-    # Получаем модель
-    if hasattr(obj, "payload") and obj.payload:
-        model_value = obj.payload["command"].split(":", 1)[1]
-    else:
-        parts = obj.text.split(" ", 1)
-        model_value = parts[1] if len(parts) > 1 else "LLAMA3_1_8B"
-
-    USER_MODELS[obj.from_id] = model_value
-    await obj.answer(f"✅ Модель установлена: {model_value}. Можете писать свой запрос.")
+# Обработка выбора модели
+@labeler.message(ChooseModelRule())
+async def choose_model_handler(message: Message, model_value: str):
+    USER_MODELS[message.from_id] = model_value
+    logger.info(f"Пользователь сменил модель на {model_value}")
+    await message.answer(f"✅ Модель установлена: {model_value}. Можешь писать свой запрос.")

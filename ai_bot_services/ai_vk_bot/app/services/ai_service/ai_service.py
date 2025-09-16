@@ -6,6 +6,7 @@ from app.schemas.ai_service import AIRequest
 
 entity_schema = "ai_service"
 
+# Выполнение запроса к сервису ai_service
 async def get_answer(request: AIRequest) -> Optional[str]:
     """
     Получить ответ на вопрос.

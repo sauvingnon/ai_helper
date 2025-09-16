@@ -14,6 +14,7 @@ def split_text(text: str):
     for i in range(0, len(text), MAX_LEN):
         yield text[i:i+MAX_LEN]
 
+# Обработка запроса к модели
 @router.message(F.text)
 async def input_email(message: Message, state: FSMContext):
     try:

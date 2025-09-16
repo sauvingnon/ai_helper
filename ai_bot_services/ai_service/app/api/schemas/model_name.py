@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Optional
 from pydantic import BaseModel
 
+# Типы моделей
 class ModelName(str, Enum):
     GROQ_PLTF = "groq/compound"
     LLAMA3_1_8B = "llama-3.1-8b-instant"
@@ -19,7 +20,7 @@ class ModelInfo:
         self.quality = quality    # качество
         self.notes = notes or ""  # доп. описание
 
-
+# Вариации моделей и их описания
 MODEL_CONFIG: dict[ModelName, ModelInfo] = {
     ModelName.GROQ_PLTF: ModelInfo(
         "⚙️ Универсальный чат без лимита",
@@ -65,12 +66,12 @@ MODEL_CONFIG: dict[ModelName, ModelInfo] = {
     ),
 }
 
-
+# Схема запроса
 class AIRequest(BaseModel):
     model: ModelName
     message: str
 
-
+# Для возвращения описания моделей.
 def get_model_description() -> str:
     """Возвращает текстовое описание всех моделей"""
     text = "📖 Доступные модели:\n\n"

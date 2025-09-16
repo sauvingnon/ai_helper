@@ -3,11 +3,10 @@ from logger import logger
 from app.services.ai_service import ai_service
 from app.schemas.ai_service import ModelName, USER_MODELS, AIRequest
 
+labeler = BotLabeler()
+
 # ВКонтакте тоже есть лимит на длину текста
 MAX_LEN = 4000  
-
-chat_labeler = BotLabeler()
-
 
 def split_text(text: str):
     for i in range(0, len(text), MAX_LEN):
@@ -24,8 +23,8 @@ async def extract_username(api, user_id: int) -> str:
         pass
     return f"Unknown {user_id}"
 
-
-@chat_labeler.message()
+# Обработка запроса
+@labeler.message()
 async def input_message(message: Message):
     try:
         user_id = message.from_id

@@ -3,8 +3,7 @@ from app.keyboards.inline import start_keyboard, commands
 from vkbottle.bot import BotLabeler, Message
 from logger import logger
 
-chat_labeler = BotLabeler()
-
+labeler = BotLabeler()
 
 async def extract_username(api, user_id: int) -> str:
     try:
@@ -16,7 +15,9 @@ async def extract_username(api, user_id: int) -> str:
         pass
     return f"Unknown {user_id}"
 
-@chat_labeler.message(text=["Начать", "/start"])
+# Стартовое сообщение
+@labeler.message(payload={"command": "start"})
+@labeler.message(text=["Начать"])
 async def start_handler(message: Message):
     try:
         user_name = await extract_username(message.ctx_api, message.from_id)

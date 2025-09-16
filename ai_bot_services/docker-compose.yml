@@ -13,12 +13,12 @@ services:
     mem_limit: 160m
     cpus: "0.2"
 
-  ai_bot: 
-    build: ./ai_bot
-    container_name: ai_bot
+  ai_tg_bot: 
+    build: ./ai_tg_bot
+    container_name: ai_tg_bot
     restart: unless-stopped
     env_file:
-      - ./ai_bot/.env
+      - ./ai_tg_bot/.env
     networks:
       - internal
     # ports:
