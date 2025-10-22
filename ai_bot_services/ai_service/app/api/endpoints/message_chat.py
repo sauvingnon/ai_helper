@@ -9,5 +9,11 @@ router = APIRouter(
 
 # Прием запросов
 @router.post("/chat")
-async def add_client(request: AIRequest):
-    return await ai_core.ai_request(request=request)
+async def chat_endpoint(request: AIRequest):
+    return await ai_core.ai_message_request(request=request)
+
+# Прием запросов
+@router.post("/voice")
+async def voice_endpoint(request: AIRequest):
+    return await ai_core.voice_handler(request)
+

@@ -1,6 +1,6 @@
 # 💡 Все клавиатуры и команды бота
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, BotCommand
-from app.schemas.ai_service import ModelName
+from app.schemas.ai_service import ModelName, USER_MODELS
 
 # 📌 Команды, отображаемые в меню Telegram
 commands = [
@@ -15,11 +15,16 @@ start_keyboard = InlineKeyboardMarkup(
     ]
 )
 
-def get_model_keyboard():
-    buttons = [
-        [InlineKeyboardButton(text=m.name, callback_data=f"set_model:{m.value}")]
-        for m in ModelName
-    ]
-    # Добавляем отдельную строку для кнопки "Отмена"
+def get_model_keyboard(tg_id: int):
+    buttons = []
+    current_model = USER_MODELS.get(tg_id, ModelName.GROQ_PLTF.value)
+    
+    # каждая кнопка — в отдельной строке
+    for model in ModelName:
+        text = f"✅ {model.name}" if model.value == current_model else model.name
+        buttons.append([InlineKeyboardButton(text=text, callback_data=f"set_model:{model.value}")])
+    
+    # добавляем строку с кнопкой отмены
     buttons.append([InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_model")])
+    
     return InlineKeyboardMarkup(inline_keyboard=buttons)

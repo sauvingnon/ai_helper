@@ -26,9 +26,9 @@ def get_model_description() -> str:
 async def cmd_cancel_model_callback(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
-    value = USER_MODELS.get(callback.from_user.id, ModelName.LLAMA3_1_8B.value)
+    value = USER_MODELS.get(callback.from_user.id, ModelName.GROQ_PLTF.value)
 
-    await callback.message.answer(f"Окей, оставляем тебе - {value}. Он тебя слушает:")
+    await callback.message.edit_text(f"Окей, оставляем тебе - {value}. Он тебя слушает:")
     await callback.answer()
 
 # Команда /set_model для выбора модели
@@ -37,7 +37,7 @@ async def cmd_set_model_message(message: Message, state: FSMContext):
     await state.set_state(ModelFSM.choosing)
     await message.answer(
         f"{get_model_description()}\n\nВыбери модель:",
-        reply_markup=get_model_keyboard()
+        reply_markup=get_model_keyboard(message.from_user.id)
     )
 
 # Кнопка «Выбрать модель» (callback_data="set_model")
@@ -46,7 +46,7 @@ async def cmd_set_model_callback(callback: CallbackQuery, state: FSMContext):
     await state.set_state(ModelFSM.choosing)
     await callback.message.answer(
         f"{get_model_description()}\n\nВыбери модель:",
-        reply_markup=get_model_keyboard()
+        reply_markup=get_model_keyboard(callback.from_user.id)
     )
     await callback.answer()  # закрывает «часики» на кнопке
 

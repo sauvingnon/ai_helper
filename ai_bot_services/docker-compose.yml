@@ -21,26 +21,6 @@ services:
       - ./ai_tg_bot/.env
     networks:
       - internal
-    # ports:
-    #   - "5678:5678"  # порт для дебаггера
-    # command: >
-    #   sh -c "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client main.py"
-    mem_limit: 128m
-    cpus: "0.2"
-    command: python main.py
-
-  ai_vk_bot: 
-    build: ./ai_vk_bot
-    container_name: ai_vk_bot
-    restart: unless-stopped
-    env_file:
-      - ./ai_vk_bot/.env
-    networks:
-      - internal
-    # ports:
-    #   - "5678:5678"  # порт для дебаггера
-    # command: >
-    #   sh -c "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client main.py"
     mem_limit: 128m
     cpus: "0.2"
     command: python main.py

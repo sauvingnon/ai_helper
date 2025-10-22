@@ -16,32 +16,34 @@ def split_text(text: str):
 
 # Обработка запроса к модели
 @router.message(F.text)
-async def input_email(message: Message, state: FSMContext):
+async def text_handler(message: Message, state: FSMContext):
     try:
-        model = USER_MODELS.get(message.from_user.id, ModelName.LLAMA3_1_8B.value)
+        model = USER_MODELS.get(message.from_user.id, ModelName.GROQ_PLTF.value)
+
+        message_old = await message.answer("⌛ Запрос принят, обработка…")
 
         text_message = message.text.strip()
 
-        ai_request = AIRequest(model=model, message=text_message)
+        ai_request = AIRequest(model=model, message=text_message, audio_base64=None)
 
         logger.info(f"Пользователь {message.from_user.username} с выбранной моделью {model} сделал запрос: {text_message}")
 
-        response = await ai_service.get_answer(ai_request)
+        response = await ai_service.get_answer_for_text(ai_request)
 
         if response is None:
             raise Exception("Пустой ответ ai_service")
         
         if len(response) < MAX_LEN:
-            await message.answer(response)
+            await message_old.edit_text(response)
             return
         else:
-            await message.answer("⌛ Ответ большой, делим на части…")
+            await message_old.edit_text("⌛ Ответ большой, делим на части…")
         
         for chunk in split_text(response):
-            await message.answer(chunk)
+            await message_old.answer(chunk)
 
-        logger.info(f"Пользователь {message.from_user.username} успешно получил ответ.")
+        logger.info(f"Пользователь {message_old.from_user.username} успешно получил ответ.")
 
     except Exception as e:
         logger.exception(f"Ошибка обработки запроса от пользователя: {e}")
-        await message.answer("❌ Произошла ошибка при обработке вашего запроса. Попробуйте снова.")
+        await message_old.answer("❌ Произошла ошибка при обработке вашего запроса. Попробуйте снова.")
