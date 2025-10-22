@@ -62,7 +62,6 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
               echo '${{ secrets.TG_BOT_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_tg_bot/.env &&
-              echo '${{ secrets.VK_BOT_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_vk_bot/.env &&
               echo '${{ secrets.AI_SERVICE_ENV_FILE }}' > /srv/ai_helper/ai_bot_services/ai_service/.env
             "
       - name: Deploy over SSH
@@ -83,7 +82,7 @@ jobs:
             echo ""
             echo "🚨 Проверка: все сервисы running?"
             FAIL=0
-            for c in bot ai_service ai_tg_bot ai_vk_bot; do
+            for c in bot ai_service ai_tg_bot; do
               STATUS=$(sudo docker inspect -f "{{.State.Status}}" ${c} || echo "missing")
               echo "$c -> $STATUS"
               if [ "$STATUS" != "running" ]; then

@@ -63,7 +63,7 @@ async def handle_audio(msg: Message):
             for chunk in split_text(result.response):
                 await message_old.answer(chunk)
 
-        logger.info(f"Пользователь {message_old.from_user.username} успешно получил ответ.")
+        logger.info(f"Пользователь {message_old.from_user.username} на свой вопрос {result.user_msg} получил ответ {result.response}")
 
     except Exception as e:
         logger.exception(f"Ошибка обработки запроса от пользователя: {e}")
