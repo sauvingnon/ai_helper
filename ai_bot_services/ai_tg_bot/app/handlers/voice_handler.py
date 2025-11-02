@@ -38,6 +38,7 @@ async def handle_audio(msg: Message):
         model = USER_MODELS.get(msg.from_user.id, ModelName.GROQ_PLTF.value)
 
         request = AIRequest(
+            user_id=msg.from_user.id,
             model=model,
             message=None,
             audio_base64=audio_base64

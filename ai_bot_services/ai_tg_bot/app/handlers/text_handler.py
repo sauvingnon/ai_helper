@@ -24,22 +24,27 @@ async def text_handler(message: Message, state: FSMContext):
 
         text_message = message.text.strip()
 
-        ai_request = AIRequest(model=model, message=text_message, audio_base64=None)
+        ai_request = AIRequest(
+            user_id=message.from_user.id,
+            model=model, 
+            message=text_message, 
+            audio_base64=None
+        )
 
         logger.info(f"Пользователь {message.from_user.username} с выбранной моделью {model} сделал запрос: {text_message}")
 
-        response = await ai_service.get_answer_for_text(ai_request)
+        result = await ai_service.get_answer_for_text(ai_request)
 
-        if response is None:
+        if result is None:
             raise Exception("Пустой ответ ai_service")
         
-        if len(response) < MAX_LEN:
-            await message_old.edit_text(response)
+        if len(result.response) < MAX_LEN:
+            await message_old.edit_text(result.response)
             return
         else:
             await message_old.edit_text("⌛ Ответ большой, делим на части…")
         
-        for chunk in split_text(response):
+        for chunk in split_text(result.response):
             await message_old.answer(chunk)
 
         logger.info(f"Пользователь {message_old.from_user.username} успешно получил ответ.")

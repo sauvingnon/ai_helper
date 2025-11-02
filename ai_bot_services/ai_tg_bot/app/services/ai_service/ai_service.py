@@ -2,12 +2,12 @@
 
 from app.services.ai_service.client import client
 from typing import Optional
-from app.schemas.ai_service import AIRequest, AIAudioResponse
+from app.schemas.ai_service import AIRequest, AIResponse
 from app.schemas.pyndantic import to_pydantic_model
 
 entity_schema = "ai_service"
 
-async def get_answer_for_text(request: AIRequest) -> Optional[str]:
+async def get_answer_for_text(request: AIRequest) -> Optional[AIResponse]:
     """
     Получить ответ на вопрос.
     """
@@ -17,10 +17,10 @@ async def get_answer_for_text(request: AIRequest) -> Optional[str]:
     )
     if response.status_code == 404:
         return None
-    response.raise_for_status()
-    return response.json()
+    response_data = response.json()
+    return to_pydantic_model(AIResponse, response_data)
 
-async def get_answer_for_audio(request: AIRequest) -> Optional[AIAudioResponse]:
+async def get_answer_for_audio(request: AIRequest) -> Optional[AIResponse]:
     """
     Получить ответ на вопрос.
     """
@@ -31,4 +31,4 @@ async def get_answer_for_audio(request: AIRequest) -> Optional[AIAudioResponse]:
     if response.status_code == 404:
         return None
     response_data = response.json()
-    return to_pydantic_model(AIAudioResponse, response_data)
+    return to_pydantic_model(AIResponse, response_data)

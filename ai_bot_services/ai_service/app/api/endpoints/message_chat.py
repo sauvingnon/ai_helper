@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.services import ai_core
+from app.core.router import process_message
 from app.api.schemas.model_name import AIRequest
 
 router = APIRouter(
@@ -10,10 +10,10 @@ router = APIRouter(
 # Прием запросов
 @router.post("/chat")
 async def chat_endpoint(request: AIRequest):
-    return await ai_core.ai_message_request(request=request)
+    return await process_message(request=request)
 
 # Прием запросов
 @router.post("/voice")
 async def voice_endpoint(request: AIRequest):
-    return await ai_core.voice_handler(request)
+    return await process_message(request)
 

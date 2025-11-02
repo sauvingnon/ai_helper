@@ -17,7 +17,7 @@ class ModelName(str, Enum):
     # Топ вроде как из всех
     GPT_OSS_120B = "openai/gpt-oss-120b"
 
-class AIAudioResponse(BaseModel):
+class AIResponse(BaseModel):
     user_msg: str
     response: str
     audio_base64: Optional[str] = None
@@ -70,6 +70,7 @@ MODEL_CONFIG: dict[ModelName, ModelInfo] = {
 
 # Схема запроса
 class AIRequest(BaseModel):
+    user_id: int
     model: ModelName
     message: Optional[str] = None
     audio_base64: Optional[str] = None
