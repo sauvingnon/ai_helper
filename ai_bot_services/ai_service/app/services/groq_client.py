@@ -49,7 +49,7 @@ async def ai_message_request(messages, model_name: str) -> str | None:
     except Exception as e:
         logger.exception(f"Ошибка при выполнении запроса в Groq API к модели: {e}")
         return None
-
+    
 
 # --- 🔊 Text-to-Speech ---
 async def get_audio_response(text: str) -> str | None:

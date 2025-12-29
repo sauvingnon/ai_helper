@@ -38,6 +38,8 @@ async def process_message(request: AIRequest) -> AIResponse | None:
         try:
             logger.info(f"Отправка запроса к groq API: {text}")
             reply = await groq_client.ai_message_request(messages, request.model.value)
+            if reply is None:
+                raise ValueError("Пустой ответ groq API")
             logger.info("Запрос успешно обработан groq API")
         except Exception:
             try:

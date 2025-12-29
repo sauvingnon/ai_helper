@@ -25,6 +25,66 @@ services:
     cpus: "0.2"
     command: python main.py
 
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    ports:
+      - "3100:3100"  # Оставляем порт наружу
+    command: 
+      - -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+      - ./loki-local-config.yaml:/etc/loki/local-config.yaml
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: promtail
+    command: 
+      - -config.file=/etc/promtail/config.yaml
+    volumes:
+      # Важно: монтируем Docker socket для автоматического обнаружения контейнеров
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # И папку с логами Docker контейнеров
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      # Конфиг промтейла
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+    restart: unless-stopped
+    depends_on:
+      - loki
+
+  # Обновляем сервис grafana в docker-compose.yml:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports: 
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # УБИРАЕМ плагин - он уже встроен в последних версиях!
+      # - GF_INSTALL_PLUGINS=grafana-loki-datasource
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+      # Добавляем для отладки
+      - GF_LOG_LEVEL=debug
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    depends_on:
+      loki:
+        condition: service_started
+
+volumes:
+  loki_data:
+    driver: local
+  grafana_data:
+    driver: local
+
 networks:
   internal:
     name: internal

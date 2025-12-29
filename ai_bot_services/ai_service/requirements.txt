@@ -2,5 +2,4 @@ python-dotenv
 fastapi
 uvicorn[standard]
 groq
-sentry-sdk
 openai

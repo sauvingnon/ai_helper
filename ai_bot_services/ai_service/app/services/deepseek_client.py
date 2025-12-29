@@ -7,17 +7,12 @@ from app.api.schemas.model_name import AIRequest
 client = OpenAI(api_key=API_TOKEN_DEEPSEEK, base_url=BASE_URL_DEEPSEEK)
 
 # --- 💬 Chat LLM ---
-async def ai_message_request(request: AIRequest) -> str | None:
+async def ai_message_request(messages) -> str | None:
     """Обработка текстового запроса пользователем."""
     try:
-        if not request.message:
-            raise ValueError("Отсутствует текст запроса.")
-
         response = client.chat.completions.create(
             model="deepseek-chat",
-            messages=[
-                {"role": "user", "content": request.message}
-            ],
+            messages=messages,
             stream=False
         )
         
